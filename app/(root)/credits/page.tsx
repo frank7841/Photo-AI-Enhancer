@@ -1,9 +1,9 @@
 import React from 'react'
 
-function Ccredits() {
+function Credits() {
   return (
-    <div>Ccredits</div>
+    <div>Credits</div>
   )
 }
 
-export default Ccredits
+export default Credits
