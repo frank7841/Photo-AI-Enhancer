@@ -21,10 +21,13 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { aspectRatioOptions, defaultValues, transformationTypes } from "@/constants"
+import { aspectRatioOptions, creditFee, defaultValues, transformationTypes } from "@/constants"
 import { CustomField } from "./CustomField"
-import { useState } from "react"
-import { AspectRatioKey } from "@/lib/utils"
+import { useState, useTransition } from "react"
+import { AspectRatioKey, debounce, deepMergeObjects } from "@/lib/utils"
+import { updateCredits } from "@/lib/actions/user.actions"
+import MediaUploader from "./MediaUploader"
+import TransformedImage from "./TransformedImage"
 
 export const formSchema = z.object({
   username: z.string().min(2).max(50),
@@ -38,10 +41,11 @@ export const formSchema = z.object({
  const TransformationForm = ({config= null, action, data = null, userId, type, creditBalance}:TransformationFormProps) => {
     const transformationType = transformationTypes[type]
     const [image, setImage] = useState(data)
-    const [newTransformation, setNewTransformatio] = useState<Transformations|null>(null)
+    const [newTransformation, setNewTransformation] = useState<Transformations|null>(null)
     const [isSubmitting, setisSubmitting] = useState(false);
-    const [isTransforming, setisTransforming] = useState(false)
-    const [setTransformationConfig, setsetTransformationConfig] = useState(config)
+    const [isTransforming, setIsTransforming] = useState(false)
+    const [transformationConfig, setTransformationConfig] = useState(config)
+    const [ispending, startTransition]= useTransition()
     const initialValues = data && action === 'Update'? {
         title:data?.title,
         aspectRatio:data?.Ratio,
@@ -61,12 +65,37 @@ export const formSchema = z.object({
     console.log(values)
   }
   const onSelectFieldHandler = (value: string, onChangeField:(value:string )=>void)=>{
+    const imageSize = aspectRatioOptions[value as AspectRatioKey]
+    setImage((prevState: any)=>({
+       ...prevState,
+       aspectRation:imageSize.aspectRatio,
+       width:imageSize.width,
+       height:imageSize.height 
+                }))
+      setNewTransformation(transformationType.config);
+      
+      return onChangeField(value)
 
   }
-  const onInputChangeHandler= (fieldName:string,value:string, type:string, onChange:(value:string)=>void)=>{
+  const onInputChangeHandler= (fieldName:string,value:string, type:string, onChangeField:(value:string)=>void)=>{
+      debounce(()=>{
+        setNewTransformation((prevState : any)=>({
+          ...prevState,
+          [type]:{...prevState?.[type],
+          [fieldName ==='prompt'?'prompt':'to']:value}}))
+          return onChangeField(value)
+          
 
+      }, 1000)
   }
-  const onTransformHandler =()=>{
+  const onTransformHandler = async ()=>{
+    setIsTransforming(true)
+    setTransformationConfig(deepMergeObjects(newTransformation, transformationConfig))
+    setNewTransformation(null)
+    startTransition(async ()=>{
+      await updateCredits(userId, creditFee)
+    })
+
 
   }
   return (
@@ -143,6 +172,29 @@ export const formSchema = z.object({
 
               </div>
             )}
+            <div className="media-uploader-field">
+              <CustomField
+                control={form.control}
+                name="publicId"
+                className=" flex size-full flex-col"
+                render={({field})=>(
+                  <MediaUploader
+                      onValueChange={field.onChange}
+                      setImage={setImage}
+                      publicId={field.value}
+                      image={image}
+                      type={type}
+                    />
+                )}/>
+                <TransformedImage
+                    image={image}
+                    type={type}
+                    title={form.getValues().title}
+                    isTransforming={isTransforming}
+                    setIsTransforming={setIsTransforming}
+                    transformationConfig={transformationConfig}
+                  />
+            </div>
             <div className="flex flex-col gap-4">
             <Button 
                 type="button"
