@@ -79,7 +79,7 @@ const MediaUploader = ({
                         <div className='media-uploader_cta-image'>
                             <Image
                                  src="/assets/icons/add.svg"
-                                 alt='add imagge'
+                                 alt='add image'
                                  width={24}
                                  height={24}/>
                                

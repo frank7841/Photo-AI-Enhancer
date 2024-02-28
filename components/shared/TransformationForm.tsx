@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { aspectRatioOptions, creditFee, defaultValues, transformationTypes } from "@/constants"
 import { CustomField } from "./CustomField"
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { AspectRatioKey, debounce, deepMergeObjects } from "@/lib/utils"
 import { updateCredits } from "@/lib/actions/user.actions"
 import MediaUploader from "./MediaUploader"
@@ -31,6 +31,7 @@ import TransformedImage from "./TransformedImage"
 import { getCldImageUrl } from "next-cloudinary"
 import { addImage, updateImage } from "@/lib/actions/image.actions"
 import { useRouter } from "next/navigation"
+import { InsufficientCreditsModal } from "./InsufficientCreditsModal"
 
 export const formSchema = z.object({
   title:z.string(),
@@ -133,10 +134,9 @@ export const formSchema = z.object({
     }
     setIsSubmitting(false)
 
-
-  
  
   }
+
   const onSelectFieldHandler = (value: string, onChangeField:(value:string )=>void)=>{
     const imageSize = aspectRatioOptions[value as AspectRatioKey]
     setImage((prevState: any)=>({
@@ -150,17 +150,21 @@ export const formSchema = z.object({
       return onChangeField(value)
 
   }
-  const onInputChangeHandler= (fieldName:string,value:string, type:string, onChangeField:(value:string)=>void)=>{
-      debounce(()=>{
-        setNewTransformation((prevState : any)=>({
-          ...prevState,
-          [type]:{...prevState?.[type],
-          [fieldName ==='prompt'?'prompt':'to']:value}}))
-          return onChangeField(value)
-          
 
-      }, 1000)
+  const onInputChangeHandler = (fieldName: string, value: string, type: string, onChangeField: (value: string) => void) => {
+    debounce(() => {
+      setNewTransformation((prevState: any) => ({
+        ...prevState,
+        [type]: {
+          ...prevState?.[type],
+          [fieldName === 'prompt' ? 'prompt' : 'to' ]: value 
+        }
+      }))
+    }, 1000)();
+      
+    return onChangeField(value)
   }
+
   const onTransformHandler = async ()=>{
     setIsTransforming(true)
     setTransformationConfig(deepMergeObjects(newTransformation, transformationConfig))
@@ -171,9 +175,17 @@ export const formSchema = z.object({
 
 
   }
+  useEffect(()=>{
+    if(image &&(type === 'restore'|| type === 'removeBackground')){
+      setNewTransformation(transformationType.config)
+    }
+
+  },[image, type, transformationType.config])
   return (
         <Form {...form}>
+
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {creditBalance < Math.abs(creditFee)&& <InsufficientCreditsModal/>}
             <CustomField
                 control={form.control}
                 name = "title"

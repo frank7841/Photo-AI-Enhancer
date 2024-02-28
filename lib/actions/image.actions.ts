@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 const populateUser = (query:any)=> query.populate({
     path:'author',
     model:User,
-    select: '_Id firstName lastName'
+    select: '_id firstName lastName'
 })
 
 export async function addImage({image, userId, path}:AddImageParams){
@@ -23,7 +23,7 @@ export async function addImage({image, userId, path}:AddImageParams){
         }
         const newImage = await Image.create({
             ...image,
-            author:author._Id
+            author:author._id
         })
 
         revalidatePath(path);
