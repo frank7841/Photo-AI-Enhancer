@@ -117,7 +117,8 @@ export const formSchema = z.object({
               _id:data._Id
              },
              userId, 
-             path:`/transformations/${data._id}`})
+             path:`/transformations/${data._id}`
+            })
 
              if(updatedImage){
             
@@ -126,7 +127,7 @@ export const formSchema = z.object({
 
           
         } catch (error) {
-          console.log("Error")
+          console.log(error)
           
         }
       }
@@ -201,8 +202,9 @@ export const formSchema = z.object({
                 className="w-full"
                     render={({field})=>(
                         <Select 
-                          onValueChange={(value) => 
-                          onSelectFieldHandler(value, field.onChange)}>
+                          onValueChange={(value) => onSelectFieldHandler(value, field.onChange)}
+                          value={field.value}
+                          >
                             <SelectTrigger className="select-field">
                                 <SelectValue placeholder="Select Size" />
                             </SelectTrigger>
@@ -224,7 +226,7 @@ export const formSchema = z.object({
                     name="prompt"
                     formLabel={type === 'remove'?'Object to remove':'Object to Recolor'}
                     className="w-full"
-                    render={(({field})=>(
+                    render={({field})=>(
                       <Input value={field.value}
                          className="input-field"
                          onChange={(e)=> onInputChangeHandler(
@@ -234,7 +236,7 @@ export const formSchema = z.object({
                           field.onChange
 
                          )} />
-                    ))}
+                    )}
                     />
                     {type === 'recolor' &&(
                       <CustomField

@@ -12,7 +12,7 @@ import {v2 as cloudinary} from 'cloudinary'
 const populateUser = (query:any)=> query.populate({
     path:'author',
     model:User,
-    select: '_id firstName lastName'
+    select: '_id firstName lastName clerkId'
 })
 
 export async function addImage({image, userId, path}:AddImageParams){
@@ -39,14 +39,21 @@ export async function addImage({image, userId, path}:AddImageParams){
 export async function updateImage({image, userId, path}:UpdateImageParams){
     try {
         await connectToDatabase();
+
         const imageToUpdate =  await Image.findById(image._id);
+        
         if(!imageToUpdate || imageToUpdate.author.toHexString()!== userId){
             throw new Error("Image not found or Unauthorised");
         }
-        const updatedImage = await Image.findByIdAndUpdate(imageToUpdate._Id,image, {new:true})
+
+        const updatedImage = await Image.findByIdAndUpdate(
+            imageToUpdate._Id,
+            image,
+            {new:true})
 
 
         revalidatePath(path);
+        
         return JSON.parse(JSON.stringify(updatedImage))
         
     } catch (error) {
@@ -58,12 +65,15 @@ export async function updateImage({image, userId, path}:UpdateImageParams){
 export async function deleteImage(imageId: string){
     try {
         await connectToDatabase();
+
         await Image.findByIdAndDelete(imageId)
-        redirect('/');
+       
         
     } catch (error) {
         handleError(error)
         
+    }finally{
+        redirect('/')
     }
 
 }
