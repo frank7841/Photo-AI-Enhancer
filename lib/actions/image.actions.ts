@@ -36,7 +36,7 @@ export async function addImage({image, userId, path}:AddImageParams){
     }
 
 }
-export async function updateImage({image, userId, path}:UpdateImageParams){
+export async function updateImage({ image, userId, path}:UpdateImageParams){
     try {
         await connectToDatabase();
 
@@ -45,6 +45,7 @@ export async function updateImage({image, userId, path}:UpdateImageParams){
         if(!imageToUpdate || imageToUpdate.author.toHexString()!== userId){
             throw new Error("Image not found or Unauthorised");
         }
+        console.log(`Image Id  : ${image._id}`);
 
         const updatedImage = await Image.findByIdAndUpdate(
             imageToUpdate._Id,
@@ -53,7 +54,7 @@ export async function updateImage({image, userId, path}:UpdateImageParams){
 
 
         revalidatePath(path);
-        
+
         return JSON.parse(JSON.stringify(updatedImage))
         
     } catch (error) {

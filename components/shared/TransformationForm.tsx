@@ -114,7 +114,7 @@ export const formSchema = z.object({
           const updatedImage = await updateImage({
              image:{
               ...imageData,
-              _id:data._Id
+              _id:data._id
              },
              userId, 
              path:`/transformations/${data._id}`
